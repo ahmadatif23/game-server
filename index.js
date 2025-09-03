@@ -5,7 +5,10 @@ const { Server } = require("socket.io");
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
-  cors: { origin: "*" }, // allow React dev server
+  cors: {
+    origin: "*", // or your Vercel domain
+    methods: ["GET", "POST"],
+  },
 });
 
 io.on("connection", (socket) => {
