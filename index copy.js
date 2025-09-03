@@ -2,28 +2,24 @@ const express = require("express");
 const http = require("http");
 const { Server } = require("socket.io");
 
-const chatHandler = require("./handlers/chat");
-const ticTacToeHandler = require("./handlers/ticTacToe");
-const unoHandler = require("./handlers/uno");
-
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: "*",
+    origin: "*", // or your Vercel domain
     methods: ["GET", "POST"],
   },
 });
 
 io.on("connection", (socket) => {
-  console.log("🔌 User connected:", socket.id);
+  console.log("🔌 A user connected:", socket.id);
 
   socket.emit("server_welcome", "Connected to Socket.IO server");
 
-  // Register feature handlers
-  chatHandler(io, socket);
-  ticTacToeHandler(io, socket);
-  unoHandler(io, socket);
+  socket.on("chat_message", (msg) => {
+    console.log("📨 Message:", msg);
+    io.emit("chat_message", msg); // broadcast to everyone
+  });
 
   socket.on("disconnect", () => {
     console.log("❌ User disconnected:", socket.id);
@@ -31,4 +27,5 @@ io.on("connection", (socket) => {
 });
 
 const PORT = process.env.PORT || 3001;
+
 server.listen(PORT, () => console.log(`🚀 Running on ${PORT}`));
