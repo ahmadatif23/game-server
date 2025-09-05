@@ -9,16 +9,17 @@ module.exports = (io, socket) => {
   socket.on("join", (payload, callback) => {
     const usersInRoom = getUsersInRoom(payload.room);
 
-    let name;
-    if (!usersInRoom.find((u) => u.name === "Player 1")) {
-      name = "Player 1";
-    } else if (!usersInRoom.find((u) => u.name === "Player 2")) {
-      name = "Player 2";
+    let role;
+    if (!usersInRoom.find((u) => u.role === "player1")) {
+      role = "player1";
+    } else if (!usersInRoom.find((u) => u.role === "player2")) {
+      role = "player2";
     }
 
     const { error, newUser } = addUser({
       id: socket.id,
-      name,
+      name: payload.playerName,
+      role,
       room: payload.room,
     });
 
@@ -30,7 +31,24 @@ module.exports = (io, socket) => {
       users: getUsersInRoom(newUser.room),
     });
 
-    socket.emit("currentUserData", { name: newUser.name });
+    // find opponent
+    const opponent = getUsersInRoom(newUser.room).find(
+      (u) => u.id !== newUser.id
+    );
+
+    // send current user their data + opponent (if exists)
+    socket.emit("currentUserData", {
+      role: newUser.role,
+      opponentName: opponent ? opponent.name : null,
+    });
+
+    // if opponent exists, also send them the new user's name
+    if (opponent) {
+      io.to(opponent.id).emit("currentUserData", {
+        role: opponent.role,
+        opponentName: newUser.name,
+      });
+    }
 
     callback();
   });
