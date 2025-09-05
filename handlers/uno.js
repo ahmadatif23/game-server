@@ -7,11 +7,18 @@ const {
 
 module.exports = (io, socket) => {
   socket.on("join", (payload, callback) => {
-    let numberOfUsersInRoom = getUsersInRoom(payload.room).length;
+    const usersInRoom = getUsersInRoom(payload.room);
+
+    let name;
+    if (!usersInRoom.find((u) => u.name === "Player 1")) {
+      name = "Player 1";
+    } else if (!usersInRoom.find((u) => u.name === "Player 2")) {
+      name = "Player 2";
+    }
 
     const { error, newUser } = addUser({
       id: socket.id,
-      name: numberOfUsersInRoom === 0 ? "Player 1" : "Player 2",
+      name,
       room: payload.room,
     });
 
